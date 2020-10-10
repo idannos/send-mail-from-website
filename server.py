@@ -1,9 +1,6 @@
 import socket
 import select
-import sys
 import smtplib
-import pickle
-import base64
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 HTTP_FORMATS = ["GET", "POST"]
@@ -27,10 +24,8 @@ def focus(data):
     """
     temp = data.split(" ")
     if temp[0] == "GET":
-        #  print "get"
         return temp[1]
     elif temp[0] == "POST":
-        #  print "post"
         data = data.split("\r\n\r\n")
         return data[1]
 
@@ -73,25 +68,21 @@ def send_email(message, email, password,send_to_email, subject):
         server.quit()
         print "sent email"
     except:
-        print "probably not valid email address"
+        print "probably not valid email address or not blocked email"
 
-to_send = ""
+
 open_client_sockets = []
 server_socket = socket.socket()
 server_socket.bind(('0.0.0.0', 80))
 server_socket.listen(100)
 
-test = ""
-new_data = ""
+
 email = ""  # email to send from
 password = ''  # password to the email above
-send_to_email = ""  # email to send to
-# message = '123'--------------------
-subject = ''  # subject to email
-pass_and_codes = {}
-user_name = ""  # as logged in the website
-password1 = ""  # as logged in the website
-
+reciever_mail = ""
+subject = ''
+content = ""
+email_const_from_client = "arnav123"
 while True:
     rlist, wlist, xlist = select.select(open_client_sockets+[server_socket], open_client_sockets, [])
     for current_socket in rlist:
@@ -102,55 +93,36 @@ while True:
         else:
             data = current_socket.recv(4096)
             if data != "":
-                #  print "data is: " + data
-                #  print "here"
+                print "here"
                 original_data = data
-                if valid_http(data):
+                if valid_http(data): 
                     data = focus(data)
-                    # print "focus data is: " + data
                     if data == "/":
-                        f = open("webs.html", "r")
+                        f = open("websie_file.html", "r")
                         txt = f.read()
                         current_socket.send(txt)
                         f.close()
-                    if data == "/favicon.ico" or data == "/img_avatar2.png":
-                        print "data for pic is: "+data
+                    if data == "/favicon.ico":
                         try:
-
-                            with open("icon.png", "rb") as image_file:
-                                a = image_file.read()
+                            with open("favicon.png", "rb") as image_file:
+                                a=image_file.read()
                                 current_socket.send(a)
                                 image_file.close()
                         except:
                             print "no favicon image in this server"
-                        """
-                        if data == "/img_avatar2.png":
-                        
-                        if data == "/favicon.ico":
-                            try:
-                                with open("icon.png", "rb") as image_file:
-                                    a=image_file.read()
-                                    current_socket.send(a)
-                                    image_file.close()
-                            except:
-                                print "no favicon image in this server"
-                            if data == "/img_avatar2.png":
-                                try:
-                                    with open("icon2.png", "rb") as image_file:
-                                        a = image_file.read()
-                                        current_socket.send(a)
-                                        image_file.close()
-                                except:
-                                    print "no favicon image in this server"
-                                    """
                     else:
                         data = clean(data)
-                        # current_socket.send("HTTP/1.1 200 Ok\r\n\r\n" + data)
-                        current_socket.send("HTTP/1.1 200 Ok\r\n\r\n" + "Test")
+                        print data
+                        if email_const_from_client in data:  # the user wnts to send an email
+                            data = data.split(email_const_from_client)  # [0] is mail. [1] is content
+                            subject = data[0]
+                            content = data[1]  # password for the code segment
+                            reciever_mail = data[2]
+                            print subject
+                            print content
+                            print reciever_mail
 
-                        print "data is: " + data
-
-
+                            send_email(content, email, password, reciever_mail, subject)
 
             open_client_sockets.remove(current_socket)
             current_socket.close()
