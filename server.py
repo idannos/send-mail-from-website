@@ -98,7 +98,7 @@ while True:
                 if valid_http(data): 
                     data = focus(data)
                     if data == "/":
-                        f = open("websie_file.html", "r")
+                        f = open("webs.html", "r")
                         txt = f.read()
                         current_socket.send(txt)
                         f.close()
